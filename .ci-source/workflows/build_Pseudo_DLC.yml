@@ -1,0 +1,47 @@
+name: build DLC-Kernel-Driver on pseudo dlc
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-branch-commit-message:
+    runs-on: [self-hosted, tpu]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: check branch commit message
+        if: ${{github.event_name == 'pull_request'}}
+        id: check-cm
+        run: |
+          python3 scripts/check_cm.py remote
+
+      - name: Install format checks dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3 python3-venv python3-pip python-is-python3
+          sudo apt-get install -y --no-install-recommends gcc sparse coccinelle linux-headers-generic
+
+      - name: Run pre-commit format checks
+        env:
+          PRE_COMMIT_HOME: /var/cache/pre-commit/DLC-Kernel-Driver
+        run: |
+          python -m pip install --user pre-commit==3.7.1
+          python -m pre_commit run --all-files --show-diff-on-failure
+
+  call-arsenal-pseudo-test:
+    needs: check-branch-commit-message
+    uses: ChipLTech/arsenal/.github/workflows/Pseudo_test.yml@main
+    with:
+      is_pr: ${{ github.event_name == 'pull_request' }}
+      caller_repo: DLC-Kernel-Driver
+      pull_request_body: |
+        DLC_KERNEL_DRIVER_BRANCH=${{ github.head_ref }}
+        ${{ github.event.pull_request.body }}
+      concurrency_suffix: dlc-kernel-driver-pseudo

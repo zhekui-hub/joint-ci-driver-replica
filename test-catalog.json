@@ -1,0 +1,392 @@
+[
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "ai_code_review.yml",
+    "job": "pr-agent-event",
+    "id": "driver.ai_code_review.pr-agent-event",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "ai_code_review.yml",
+    "job": "pr-agent-dispatch",
+    "id": "driver.ai_code_review.pr-agent-dispatch",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "build_Pseudo_DLC.yml",
+    "job": "check-branch-commit-message",
+    "id": "driver.build_Pseudo_DLC.check-branch-commit-message",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "build_Pseudo_DLC.yml",
+    "job": "call-arsenal-pseudo-test",
+    "id": "driver.build_Pseudo_DLC.call-arsenal-pseudo-test",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "check-branch-commit-message"
+    ]
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "route",
+    "id": "driver.ci_router.route",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "prechecks",
+    "id": "driver.ci_router.prechecks",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "run_actual_tpu",
+    "id": "driver.ci_router.run_actual_tpu",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "route",
+      "prechecks"
+    ]
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "run_pseudo",
+    "id": "driver.ci_router.run_pseudo",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "route",
+      "prechecks"
+    ]
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "run_multi_kernel",
+    "id": "driver.ci_router.run_multi_kernel",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "route",
+      "prechecks"
+    ]
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "run_vtpu_uat",
+    "id": "driver.ci_router.run_vtpu_uat",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "route",
+      "prechecks"
+    ]
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "ci_router.yml",
+    "job": "aggregate",
+    "id": "driver.ci_router.aggregate",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "route",
+      "prechecks",
+      "run_actual_tpu",
+      "run_pseudo",
+      "run_multi_kernel",
+      "run_vtpu_uat"
+    ]
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "dingding_robot.yml",
+    "job": "build-success",
+    "id": "driver.dingding_robot.build-success",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "dingding_robot.yml",
+    "job": "build-failed",
+    "id": "driver.dingding_robot.build-failed",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "driver_api_guard.yml",
+    "job": "driver_api_guard",
+    "id": "driver.driver_api_guard.driver_api_guard",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "driver_api_guard.yml",
+    "job": "refresh_open_pr_guards",
+    "id": "driver.driver_api_guard.refresh_open_pr_guards",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "driver",
+    "workflow": "multi-kernel-build.yml",
+    "job": "call-arsenal-multi-kernel",
+    "id": "driver.multi-kernel-build.call-arsenal-multi-kernel",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "release-tag.yml",
+    "job": "release",
+    "id": "driver.release-tag.release",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "release-tarball.yml",
+    "job": "tarball",
+    "id": "driver.release-tarball.tarball",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "release.yml",
+    "job": "release",
+    "id": "driver.release.release",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "stale-pr-notify.yml",
+    "job": "stale",
+    "id": "driver.stale-pr-notify.stale",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "stale-pr-notify.yml",
+    "job": "notify",
+    "id": "driver.stale-pr-notify.notify",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "test_on_tpu.yml",
+    "job": "pre-checks",
+    "id": "driver.test_on_tpu.pre-checks",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "test_on_tpu.yml",
+    "job": "call-singlecard",
+    "id": "driver.test_on_tpu.call-singlecard",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": [
+      "pre-checks"
+    ]
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "test_on_virt_tpu.yml",
+    "job": "call-virt-tpu-smoke",
+    "id": "driver.test_on_virt_tpu.call-virt-tpu-smoke",
+    "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
+    "matrix": {
+      "replica_case": [
+        "default"
+      ]
+    },
+    "needs": []
+  },
+  {
+    "scope": "public",
+    "repo": "joint",
+    "workflow": "joint-triad",
+    "job": "public-smoke",
+    "id": "joint.triad.public-smoke",
+    "matrix": {
+      "profile": [
+        "default",
+        "negative-contract"
+      ]
+    },
+    "needs": [
+      "driver",
+      "synapse",
+      "sim"
+    ]
+  },
+  {
+    "scope": "private",
+    "repo": "driver",
+    "workflow": "joint-triad",
+    "job": "private-contract",
+    "id": "joint.driver.private-contract",
+    "matrix": {
+      "case": [
+        "default"
+      ]
+    },
+    "needs": []
+  }
+]

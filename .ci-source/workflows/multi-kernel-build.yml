@@ -1,0 +1,17 @@
+name: Multi-Kernel Build DLC-Kernel-Driver
+
+on:
+  workflow_dispatch:
+    inputs:
+      concurrency_suffix:
+        required: false
+        default: ''
+
+jobs:
+  call-arsenal-multi-kernel:
+    uses: ChipLTech/arsenal/.github/workflows/multi-kernel-build.yml@main
+    with:
+      is_pr: ${{ github.event_name == 'pull_request' }}
+      pull_request_body: ${{ github.event.pull_request.body || '' }}
+      concurrency_suffix: "-${{ github.run_id }}"
+    secrets: inherit

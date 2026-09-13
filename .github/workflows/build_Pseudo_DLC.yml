@@ -1,0 +1,58 @@
+name: build DLC-Kernel-Driver on pseudo dlc [replica dry-run]
+'on':
+  workflow_dispatch: null
+permissions:
+  contents: read
+  actions: read
+env:
+  REPLICA_SOURCE_SHA: 44a09c8778ba2899310781ccb227ad9c82b3d2d7
+  REPLICA_TEST_MODE: dry-run
+jobs:
+  check-branch-commit-message:
+    name: check-branch-commit-message [simulated]
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: build_Pseudo_DLC.yml
+      REPLICA_SOURCE_JOB: check-branch-commit-message
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  call-arsenal-pseudo-test:
+    name: call-arsenal-pseudo-test [simulated]
+    needs:
+    - check-branch-commit-message
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: build_Pseudo_DLC.yml
+      REPLICA_SOURCE_JOB: call-arsenal-pseudo-test
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py

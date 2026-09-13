@@ -1,0 +1,37 @@
+name: Multi-Kernel Build DLC-Kernel-Driver [replica dry-run]
+'on':
+  workflow_dispatch:
+    inputs:
+      concurrency_suffix:
+        required: 'false'
+        default: ''
+permissions:
+  contents: read
+  actions: read
+env:
+  REPLICA_SOURCE_SHA: 44a09c8778ba2899310781ccb227ad9c82b3d2d7
+  REPLICA_TEST_MODE: dry-run
+jobs:
+  call-arsenal-multi-kernel:
+    name: call-arsenal-multi-kernel [simulated]
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: multi-kernel-build.yml
+      REPLICA_SOURCE_JOB: call-arsenal-multi-kernel
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py

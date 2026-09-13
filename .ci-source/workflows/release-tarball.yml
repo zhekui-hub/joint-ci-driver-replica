@@ -1,0 +1,69 @@
+# Produce release tarball + SHA256 checksums when a GitHub Release is created
+# (either manually or by the existing release.yml workflow).
+#
+# The tarball is built from the tag ref via `scripts/build-tarball.sh` and
+# uploaded as a Release asset.
+
+name: Release Tarball
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write           # needed to upload release assets
+
+jobs:
+  tarball:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Verify release tag is on main
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          git fetch --force origin main:refs/remotes/origin/main
+          git fetch --force --tags
+
+          tag_sha="$(git rev-list -n 1 "$RELEASE_TAG")"
+          head_sha="$(git rev-parse HEAD)"
+          if [ "$tag_sha" != "$head_sha" ]; then
+            echo "ERROR: release tag $RELEASE_TAG points to $tag_sha, but checkout is $head_sha" >&2
+            exit 1
+          fi
+
+          if ! git tag --points-at HEAD | grep -Fx "$RELEASE_TAG" >/dev/null; then
+            echo "ERROR: release tarball must be built from the exact release tag $RELEASE_TAG" >&2
+            echo "Tags pointing at HEAD:" >&2
+            git tag --points-at HEAD >&2
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor "$head_sha" origin/main; then
+            echo "ERROR: release tag $RELEASE_TAG points to $head_sha, which is not in origin/main history" >&2
+            exit 1
+          fi
+
+      - name: Build tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${VERSION#V}"
+          DRIVER_VERSION="${VERSION}" ./scripts/build-tarball.sh "${GITHUB_REF_NAME}"
+
+      - name: Upload assets to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          gh release upload "$TAG" \
+            build/chipltech-driver-*.tar.gz \
+            build/SHA256SUMS \
+            --clobber

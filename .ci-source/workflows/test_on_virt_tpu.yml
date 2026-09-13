@@ -1,0 +1,20 @@
+name: test DLC-Kernel-Driver on virt tpu
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  call-virt-tpu-smoke:
+    uses: ChipLTech/arsenal/.github/workflows/test_on_virt_tpu.yml@ci/add-virt-tpu-workflow
+    with:
+      is_pr: ${{ github.event_name == 'pull_request' }}
+      arsenal_ref: ci/add-virt-tpu-workflow
+      pull_request_body: |
+        ${{ github.event.pull_request.body }}
+      concurrency_suffix: dlc-kernel-driver-virt-tpu
+      run_mdev_uat: true
+    secrets: inherit

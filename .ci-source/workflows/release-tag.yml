@@ -1,0 +1,161 @@
+name: Auto Tag & Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+env:
+  CONFIG_PATH: drivers/chipltech/include/config.h
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: arc-runner-ci-router
+    permissions:
+      contents: write
+
+    steps:
+      - name: Prepare preloaded repository
+        env:
+          TARGET_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          repo="$GITHUB_WORKSPACE"
+          if [[ ! -d "$repo/.git" ]]; then
+            echo "::error::Preloaded repository not found at $repo"
+            exit 1
+          fi
+          if [[ -z "$TARGET_SHA" || -z "$BASE_REF" ]]; then
+            echo "::error::Missing merged commit or base branch from pull request event"
+            exit 1
+          fi
+
+          # The runner image rewrites HTTPS GitHub URLs to SSH globally. Use an
+          # isolated global config so fetch and push stay scoped to github.token.
+          export GIT_CONFIG_GLOBAL="$RUNNER_TEMP/release-gitconfig"
+          : > "$GIT_CONFIG_GLOBAL"
+          echo "GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL" >> "$GITHUB_ENV"
+          git config --global --add safe.directory "$repo"
+
+          git -C "$repo" remote set-url origin \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git -C "$repo" config --local --unset-all \
+            http.https://github.com/.extraheader || true
+          auth_header="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          git -C "$repo" config --local \
+            http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic ${auth_header}"
+
+          if [[ -n "$(git -C "$repo" status --porcelain=v1 --untracked-files=no)" ]]; then
+            echo "::error::Preloaded repository contains tracked changes"
+            exit 1
+          fi
+
+          fetch_args=(--force --prune)
+          if [[ "$(git -C "$repo" rev-parse --is-shallow-repository)" == "true" ]]; then
+            fetch_args+=(--unshallow)
+          fi
+          git -C "$repo" fetch "${fetch_args[@]}" origin \
+            "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}" \
+            "+refs/tags/*:refs/tags/*"
+          git -C "$repo" checkout --force --detach "$TARGET_SHA"
+
+          actual_sha="$(git -C "$repo" rev-parse HEAD)"
+          if [[ "$actual_sha" != "$TARGET_SHA" ]]; then
+            echo "::error::Checkout mismatch: expected $TARGET_SHA, got $actual_sha"
+            exit 1
+          fi
+          if ! git -C "$repo" merge-base --is-ancestor \
+            "$TARGET_SHA" "origin/$BASE_REF"; then
+            echo "::error::Target $TARGET_SHA is not reachable from origin/$BASE_REF"
+            exit 1
+          fi
+          echo "::notice::Prepared ${GITHUB_REPOSITORY}@${actual_sha}"
+
+      - name: Check API version upgrade
+        id: api_upgrade
+        run: |
+          OLD_API=$(git show HEAD^:drivers/chipltech/include/config.h 2>/dev/null | grep -oP '#define\s+CHIPLTECH_API_VERSION\s+"\K\d+' | head -1)
+          NEW_API=$(grep -oP '#define\s+CHIPLTECH_API_VERSION\s+"\K\d+' $CONFIG_PATH | head -1)
+
+          echo "OLD_API=$OLD_API" >> $GITHUB_OUTPUT
+          echo "NEW_API=$NEW_API" >> $GITHUB_OUTPUT
+          echo "::notice::Previous API version: $OLD_API"
+          echo "::notice::Current API version: $NEW_API"
+
+          if [ "$OLD_API" != "$NEW_API" ] && [ -n "$OLD_API" ]; then
+            echo "IS_UPGRADE=true" >> $GITHUB_OUTPUT
+            echo "TAG_NAME=v${NEW_API}.0.0" >> $GITHUB_OUTPUT
+            echo "::notice::Detected API version upgrade: $OLD_API -> $NEW_API"
+          else
+            echo "IS_UPGRADE=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create major version tag
+        if: steps.api_upgrade.outputs.IS_UPGRADE == 'true'
+        env:
+          TAG_NAME: ${{ steps.api_upgrade.outputs.TAG_NAME }}
+        run: |
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "::notice::Tag $TAG_NAME already exists, skip creating"
+            exit 0
+          fi
+          echo "::notice::Creating major version tag: $TAG_NAME"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG_NAME" -m "Major version $TAG_NAME"
+          git push origin "$TAG_NAME"
+          echo "::notice::Tag $TAG_NAME pushed successfully"
+
+      - name: Calculate expected version
+        if: steps.api_upgrade.outputs.IS_UPGRADE != 'true'
+        id: new_version
+        run: |
+          set -e
+          NEW_VERSION=$(python3 scripts/check_cm.py calc_remote)
+          if [ -z "$NEW_VERSION" ]; then
+            echo "::error::Failed to calculate version from check_cm.py"
+            exit 1
+          fi
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::Calculated new version: $NEW_VERSION"
+
+      - name: Check if tag already exists
+        if: steps.api_upgrade.outputs.IS_UPGRADE != 'true'
+        id: check_tag
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.NEW_VERSION }}
+        run: |
+          if git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+            echo "::notice::Tag v$NEW_VERSION already exists"
+            echo "SHOULD_CREATE=false" >> $GITHUB_OUTPUT
+          else
+            echo "::notice::Tag v$NEW_VERSION does not exist yet"
+            echo "SHOULD_CREATE=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.api_upgrade.outputs.IS_UPGRADE != 'true' && steps.new_version.outputs.NEW_VERSION != '' && steps.check_tag.outputs.SHOULD_CREATE == 'true'
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.NEW_VERSION }}
+        run: |
+          echo "::notice::Creating tag v$NEW_VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
+          echo "::notice::Tag v$NEW_VERSION pushed successfully"
+
+      - name: Clear GitHub credentials
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ -d "$GITHUB_WORKSPACE/.git" ]]; then
+            git -C "$GITHUB_WORKSPACE" config --local --unset-all \
+              http.https://github.com/.extraheader || true
+          fi

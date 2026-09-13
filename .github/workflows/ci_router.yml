@@ -1,0 +1,197 @@
+name: Driver PR CI Router [replica dry-run]
+'on':
+  pull_request:
+    branches:
+    - main
+    types:
+    - opened
+    - synchronize
+    - reopened
+  workflow_dispatch: null
+permissions:
+  contents: read
+  actions: read
+env:
+  REPLICA_SOURCE_SHA: 44a09c8778ba2899310781ccb227ad9c82b3d2d7
+  REPLICA_TEST_MODE: dry-run
+jobs:
+  route:
+    name: route [simulated]
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: route
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  prechecks:
+    name: prechecks [simulated]
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: prechecks
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  run_actual_tpu:
+    name: run_actual_tpu [simulated]
+    needs:
+    - route
+    - prechecks
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: run_actual_tpu
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  run_pseudo:
+    name: run_pseudo [simulated]
+    needs:
+    - route
+    - prechecks
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: run_pseudo
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  run_multi_kernel:
+    name: run_multi_kernel [simulated]
+    needs:
+    - route
+    - prechecks
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: run_multi_kernel
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  run_vtpu_uat:
+    name: run_vtpu_uat [simulated]
+    needs:
+    - route
+    - prechecks
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: run_vtpu_uat
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py
+  aggregate:
+    name: Driver CI aggregate [simulated]
+    needs:
+    - route
+    - prechecks
+    - run_actual_tpu
+    - run_pseudo
+    - run_multi_kernel
+    - run_vtpu_uat
+    if: ${{ always() }}
+    runs-on:
+    - self-hosted
+    - replica-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        replica_case:
+        - default
+    env:
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: ci_router.yml
+      REPLICA_SOURCE_JOB: aggregate
+      REPLICA_SCOPE: public
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
+        }}
+      MATRIX_JSON: ${{ toJson(matrix) }}
+    steps:
+    - name: Simulate source job contract
+      shell: python
+      run: python ci_sim/runner.py

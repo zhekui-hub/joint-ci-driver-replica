@@ -1,0 +1,224 @@
+name: Driver PR CI Router
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  route:
+    uses: ChipLTech/arsenal/.github/workflows/ci_router_external_repo.yml@main
+    with:
+      repository_kind: DLC-Kernel-Driver
+      base_sha: ${{ github.event.pull_request.base.sha }}
+      head_sha: ${{ github.event.pull_request.head.sha }}
+
+  prechecks:
+    runs-on: arc-runner-ci-router
+    steps:
+      - name: Prepare driver repository
+        shell: bash
+        env:
+          CALLER_REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          CALLER_DIR="$(mktemp -d "${RUNNER_TEMP}/driver-prechecks-XXXXXX")"
+          printf 'CALLER_DIR=%s\n' "$CALLER_DIR" >> "$GITHUB_ENV"
+
+          git init -q "$CALLER_DIR"
+          git -C "$CALLER_DIR" remote add origin "git@github.com:${CALLER_REPOSITORY}.git"
+
+          echo "Fetching driver repository over SSH: git@github.com:${CALLER_REPOSITORY}.git @ head ${HEAD_SHA}, base ${BASE_SHA}"
+          if ! git -C "$CALLER_DIR" fetch --no-tags --depth=1 origin "$HEAD_SHA" "$BASE_SHA"; then
+            echo "Fetch of head/base commits failed. Ensure both commits are reachable to this runner over SSH." >&2
+            exit 1
+          fi
+          if ! git -C "$CALLER_DIR" cat-file -e "${HEAD_SHA}^{commit}" 2>/dev/null; then
+            echo "Head commit ${HEAD_SHA} could not be fetched." >&2
+            exit 1
+          fi
+          git -C "$CALLER_DIR" checkout --detach "$HEAD_SHA"
+
+          if ! git -C "$CALLER_DIR" cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Base commit ${BASE_SHA} could not be fetched." >&2
+            exit 1
+          fi
+          actual_head="$(git -C "$CALLER_DIR" rev-parse HEAD)"
+          if [[ "$actual_head" != "$HEAD_SHA" ]]; then
+            echo "Driver checkout mismatch: expected ${HEAD_SHA}, got ${actual_head}" >&2
+            exit 1
+          fi
+          echo "Checked out driver repository: ${CALLER_REPOSITORY}@${actual_head}"
+
+      - name: Check branch commit message
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CALLER_DIR"
+          python3 scripts/check_cm.py remote
+
+      - name: Install format check dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo_cmd=()
+          if [[ "$(id -u)" -ne 0 ]]; then
+            sudo_cmd=(sudo)
+          fi
+          "${sudo_cmd[@]}" apt-get update
+          "${sudo_cmd[@]}" apt-get install -y --no-install-recommends python3 python3-venv python3-pip python-is-python3
+          "${sudo_cmd[@]}" apt-get install -y --no-install-recommends gcc sparse coccinelle ocaml ocaml-native-compilers linux-headers-generic
+
+      - name: Run pre-commit format checks
+        shell: bash
+        env:
+          PRE_COMMIT_HOME: /var/cache/pre-commit/DLC-Kernel-Driver
+        run: |
+          set -euo pipefail
+          cd "$CALLER_DIR"
+          python -m pip install --user pre-commit==3.7.1
+          python -m pre_commit run --all-files --show-diff-on-failure
+
+      - name: Cleanup driver checkout
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${CALLER_DIR:-}" && -d "$CALLER_DIR" && "$CALLER_DIR" == "${RUNNER_TEMP}/"* ]]; then
+            rm -rf -- "$CALLER_DIR"
+          fi
+
+  run_actual_tpu:
+    needs: [route, prechecks]
+    if: ${{ needs.route.outputs.run_actual_tpu == 'true' }}
+    uses: ChipLTech/arsenal/.github/workflows/MultiRepo_runtest.yml@main
+    with:
+      test_scope: both
+      arsenal_ref: main
+      caller_repo: DLC-Kernel-Driver
+      pull_request_body: |
+        DLC_KERNEL_DRIVER_BRANCH=${{ github.head_ref }}
+        ${{ github.event.pull_request.body }}
+      concurrency_suffix: dlc-kernel-driver-ci-${{ github.run_id }}
+    secrets: inherit
+
+  run_pseudo:
+    needs: [route, prechecks]
+    if: ${{ needs.route.outputs.run_pseudo == 'true' }}
+    uses: ChipLTech/arsenal/.github/workflows/Pseudo_test.yml@main
+    with:
+      is_pr: true
+      pull_request_body: ${{ github.event.pull_request.body || '' }}
+      concurrency_suffix: dlc-kernel-driver-pseudo-${{ github.run_id }}
+
+  run_multi_kernel:
+    needs: [route, prechecks]
+    if: ${{ needs.route.outputs.run_multi_kernel == 'true' }}
+    uses: ChipLTech/arsenal/.github/workflows/multi-kernel-build.yml@main
+    with:
+      is_pr: true
+      pull_request_body: ${{ github.event.pull_request.body || '' }}
+      concurrency_suffix: dlc-kernel-driver-multi-kernel-${{ github.run_id }}
+    secrets: inherit
+
+  run_vtpu_uat:
+    needs: [route, prechecks]
+    if: ${{ needs.route.outputs.run_vtpu_uat == 'true' }}
+    uses: ChipLTech/arsenal/.github/workflows/test_on_virt_tpu.yml@ci/add-virt-tpu-workflow
+    with:
+      is_pr: true
+      arsenal_ref: ci/add-virt-tpu-workflow
+      pull_request_body: ${{ github.event.pull_request.body || '' }}
+      concurrency_suffix: dlc-kernel-driver-vtpu-${{ github.run_id }}
+      run_mdev_uat: true
+    secrets: inherit
+
+  aggregate:
+    name: Driver CI aggregate
+    needs:
+      - route
+      - prechecks
+      - run_actual_tpu
+      - run_pseudo
+      - run_multi_kernel
+      - run_vtpu_uat
+    if: ${{ always() }}
+    runs-on: arc-runner-ci-router
+    steps:
+      - name: Evaluate routed CI results
+        shell: bash
+        env:
+          ROUTE_RESULT: ${{ needs.route.result }}
+          PRECHECKS_RESULT: ${{ needs.prechecks.result }}
+          RUN_ACTUAL_TPU_EXPECTED: ${{ needs.route.outputs.run_actual_tpu }}
+          RUN_ACTUAL_TPU_RESULT: ${{ needs.run_actual_tpu.result }}
+          RUN_ACTUAL_TPU_TEST_STATUS: ${{ needs.run_actual_tpu.outputs.test_status }}
+          RUN_PSEUDO_EXPECTED: ${{ needs.route.outputs.run_pseudo }}
+          RUN_PSEUDO_RESULT: ${{ needs.run_pseudo.result }}
+          RUN_MULTI_KERNEL_EXPECTED: ${{ needs.route.outputs.run_multi_kernel }}
+          RUN_MULTI_KERNEL_RESULT: ${{ needs.run_multi_kernel.result }}
+          RUN_VTPU_UAT_EXPECTED: ${{ needs.route.outputs.run_vtpu_uat }}
+          RUN_VTPU_UAT_RESULT: ${{ needs.run_vtpu_uat.result }}
+        run: |
+          set -euo pipefail
+
+          failures=()
+
+          check_required() {
+            local workflow="$1"
+            local result="$2"
+            if [[ "$result" != "success" ]]; then
+              failures+=("${workflow} expected success, got ${result}")
+            fi
+          }
+
+          check_routed() {
+            local workflow="$1"
+            local expected="$2"
+            local result="$3"
+            local final_status="${4:-}"
+
+            if [[ "$expected" != "true" && "$expected" != "false" ]]; then
+              failures+=("${workflow} expected a boolean routing decision, got ${expected:-<empty>}")
+              return
+            fi
+            if [[ "$expected" == "true" ]]; then
+              local effective_result="$result"
+              case "$result" in
+                success|failure)
+                  if [[ -n "$final_status" ]]; then
+                    effective_result="$final_status"
+                  fi
+                  ;;
+              esac
+              if [[ "$effective_result" != "success" ]]; then
+                failures+=("${workflow} expected success, got result=${result}, final_status=${final_status:-<empty>}")
+              fi
+            fi
+            if [[ "$expected" == "false" && "$result" != "skipped" ]]; then
+              failures+=("${workflow} expected skipped, got ${result}")
+            fi
+          }
+
+          check_required "route / determine_external" "$ROUTE_RESULT"
+          check_required "prechecks" "$PRECHECKS_RESULT"
+          check_routed "run_actual_tpu / MultiRepo_runtest.yml" "$RUN_ACTUAL_TPU_EXPECTED" "$RUN_ACTUAL_TPU_RESULT" "$RUN_ACTUAL_TPU_TEST_STATUS"
+          check_routed "run_pseudo / Pseudo_test.yml" "$RUN_PSEUDO_EXPECTED" "$RUN_PSEUDO_RESULT"
+          check_routed "run_multi_kernel / multi-kernel-build.yml" "$RUN_MULTI_KERNEL_EXPECTED" "$RUN_MULTI_KERNEL_RESULT"
+          check_routed "run_vtpu_uat / test_on_virt_tpu.yml" "$RUN_VTPU_UAT_EXPECTED" "$RUN_VTPU_UAT_RESULT"
+
+          if ((${#failures[@]} > 0)); then
+            printf 'Routed CI failed:\n' >&2
+            printf ' - %s\n' "${failures[@]}" >&2
+            exit 1
+          fi
+
+          echo "Routed CI passed."

@@ -1,0 +1,30 @@
+name: 'Stale PR Check and Notify'
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+
+jobs:
+  stale:
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: [self-hosted, tpu]
+    steps:
+      - uses: actions/stale@v9
+        with:
+          stale-issue-message: 'This issue is stale because it has been open for 3 days with no activity.'
+          stale-pr-message: 'This pull request is stale because it has been open for 3 days with no activity. Remove stale label or comment otherwise it will be closed in 1 day.'
+          close-pr-message: 'This pull request was closed because it has been stalled for 1 days with no activity.'
+          days-before-stale: 3
+          days-before-close: 1
+          days-before-issue-close: -1
+          remove-stale-when-updated: true
+
+  notify:
+    if: ${{ github.event_name == 'schedule' && github.event.action == 'closed' && !github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'Stale') }}
+    runs-on: [self-hosted, tpu]
+    steps:
+      - name: "Send DingDing Notification"
+        run: |
+            curl 'https://oapi.dingtalk.com/robot/send?access_token=5e875e8726b5c3f741ed783288c0dcfc2b5c9fe7c976c57645c3c7a7465977ab'  \
+            -H 'Content-Type: application/json' \
+            -d '{"msgtype": "text","text": {"content":"pull_request${{ github.event.pull_request.html_url }}因为超过3天未合入被自动关闭了\n麻烦相关负责人检查一下@all"},"at":{"atMobiles":[""],"isAtAll":true}}' 
