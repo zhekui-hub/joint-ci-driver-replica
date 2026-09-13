@@ -3,7 +3,7 @@ name: Multi-Kernel Build DLC-Kernel-Driver [replica dry-run]
   workflow_dispatch:
     inputs:
       concurrency_suffix:
-        required: 'false'
+        required: false
         default: ''
 permissions:
   contents: read

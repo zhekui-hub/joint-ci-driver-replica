@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   independent-contract:
@@ -28,10 +27,10 @@ jobs:
       matrix:
         case: [default, negative-contract]
     env:
-      driver_REPOSITORY: driver
-      driver_SOURCE_WORKFLOW: joint_ci_hook
-      driver_SOURCE_JOB: independent-contract
-      driver_SCOPE: private
+      REPLICA_REPOSITORY: driver
+      REPLICA_SOURCE_WORKFLOW: joint_ci_hook
+      REPLICA_SOURCE_JOB: independent-contract
+      REPLICA_SCOPE: private
       MATRIX_JSON: ${{ toJson(matrix) }}
     steps:
       - uses: actions/checkout@v4
@@ -43,13 +42,13 @@ jobs:
     if: ${{ always() }}
     runs-on: [self-hosted, replica-driver]
     env:
-      driver_REPOSITORY: driver
+      REPLICA_REPOSITORY: driver
       JOINT_CI_ID: ${{ inputs.joint_id || 'replica-pr' }}
       JOINT_WAIT: ${{ inputs.joint_wait || 'true' }}
-      JOINT_DEPS_JSON: ${{ inputs.depends_on_json || '{}' }}
-      driver_SOURCE_WORKFLOW: joint_ci_hook
-      driver_SOURCE_JOB: joint-report
-      driver_SCOPE: public
+      JOINT_DEPS_JSON: ${{ inputs.depends_on_json || '{{}}' }}
+      REPLICA_SOURCE_WORKFLOW: joint_ci_hook
+      REPLICA_SOURCE_JOB: joint-report
+      REPLICA_SCOPE: public
       GITHUB_HEAD_REF: ${{ github.head_ref || github.ref_name }}
       GITHUB_SHA: ${{ github.sha }}
     steps:
