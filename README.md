@@ -14,3 +14,7 @@ Dispatch `joint_ci_hook.yml` for the participant gate. Arsenal also exposes `joi
 ## PR smoke retry
 
 This branch is used to observe the replica gate and joint-report flow on a fresh real pull request.
+
+## Joint CI wait-state observation
+
+This test branch intentionally opens the Driver participant first. The Synapse participant is omitted so `Joint CI readiness` should remain pending until its report arrives.
