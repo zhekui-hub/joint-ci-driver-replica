@@ -39,7 +39,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Simulate source job contract
       shell: python
-      run: python ci_sim/runner.py
+      run: python3 ci_sim/runner.py
   call-arsenal-pseudo-test:
     name: call-arsenal-pseudo-test [simulated]
     if: ${{ always() }}
@@ -65,6 +65,6 @@ jobs:
       uses: actions/checkout@v4
     - name: Simulate source job contract
       shell: python
-      run: python ci_sim/runner.py
+      run: python3 ci_sim/runner.py
     needs:
     - check-branch-commit-message
