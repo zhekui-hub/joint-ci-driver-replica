@@ -45,7 +45,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
   prechecks:
     name: prechecks [simulated]
@@ -71,7 +71,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
   run_actual_tpu:
     name: run_actual_tpu [simulated]
@@ -97,7 +97,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
     needs:
     - route
@@ -126,7 +126,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
     needs:
     - route
@@ -155,7 +155,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
     needs:
     - route
@@ -184,7 +184,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
     needs:
     - route
@@ -213,7 +213,7 @@ jobs:
     - name: Checkout replica harness
       uses: actions/checkout@v4
     - name: Simulate source job contract
-      shell: python
+      shell: bash
       run: python3 ci_sim/runner.py
     needs:
     - route
