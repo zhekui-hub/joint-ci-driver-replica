@@ -1,6 +1,71 @@
 {
-  "repo": "joint-ci-driver-replica",
-  "source_sha": "44a09c8778ba2899310781ccb227ad9c82b3d2d7",
-  "workflows": 12,
-  "jobs": 24
+  "repo": "driver",
+  "source_repo": "ChipLTech/DLC-Kernel-Driver",
+  "source_sha": "aa84e677db3e14cd9b704534e421e0290dee7b99",
+  "runner_label": "grok-box",
+  "mode": "dry-run",
+  "workflow_count": 12,
+  "job_count": 24,
+  "workflows": [
+    {
+      "path": "ai_code_review.yml",
+      "sha256": "84b36161fffa9c118266a5decaea7c08b3474ae8b1db00effaf40b12241fb4fa",
+      "jobs": 2
+    },
+    {
+      "path": "build_Pseudo_DLC.yml",
+      "sha256": "63dedea1170959bbf89266c67dbd5dca576aeb0c90d00aafc63878c661d3671d",
+      "jobs": 2
+    },
+    {
+      "path": "ci_router.yml",
+      "sha256": "9987b34967740c4d69b046f2478522b2863f924db53641dd99c072f78b9e861e",
+      "jobs": 7
+    },
+    {
+      "path": "dingding_robot.yml",
+      "sha256": "936198f731fe84f2c6df774d2a2cdc811cdd5fcc45db2cb5cb3b48a4175aede2",
+      "jobs": 2
+    },
+    {
+      "path": "driver_api_guard.yml",
+      "sha256": "c5e6d07eb24de8b5a38709351b1879340d3d44fae6e7340b2f698d31bd39901e",
+      "jobs": 2
+    },
+    {
+      "path": "multi-kernel-build.yml",
+      "sha256": "def09c3d901b5bf4bae7d3186853c34fd22c2b219142dca382ffeb6dced4f7ed",
+      "jobs": 1
+    },
+    {
+      "path": "release-tag.yml",
+      "sha256": "61421b474a9f559dca2afbdde350ee15c0b6f41cb1d283c6bc08bad09d4b4d7b",
+      "jobs": 1
+    },
+    {
+      "path": "release-tarball.yml",
+      "sha256": "42172284e2ea56cf80590202b9eef47d4ff77724d40da7041e2973a1ae3e14f7",
+      "jobs": 1
+    },
+    {
+      "path": "release.yml",
+      "sha256": "05bae2861e3c0ad1acc78470815f117406eae9446d6b9e48fb143ae9ad38fde9",
+      "jobs": 1
+    },
+    {
+      "path": "stale-pr-notify.yml",
+      "sha256": "21494b2da4736314a99d89e191c5cd205cb1c4f30d33fa634e03be440bd277c1",
+      "jobs": 2
+    },
+    {
+      "path": "test_on_tpu.yml",
+      "sha256": "0aefe42f3058fde577379694af9b339dcd871ac367bc0bd38615e6edfe74094f",
+      "jobs": 2
+    },
+    {
+      "path": "test_on_virt_tpu.yml",
+      "sha256": "7e8ab7e508721de13194b6805c11fbac9cc2a090e07f7892a0a977dff36d3b78",
+      "jobs": 1
+    }
+  ]
 }

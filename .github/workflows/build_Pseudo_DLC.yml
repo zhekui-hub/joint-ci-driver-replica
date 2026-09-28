@@ -1,19 +1,26 @@
 name: build DLC-Kernel-Driver on pseudo dlc [replica dry-run]
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: Fail one simulated job by id/workflow/repo, or all
+        required: false
+        default: ''
 permissions:
   contents: read
   actions: read
 env:
-  REPLICA_SOURCE_SHA: 44a09c8778ba2899310781ccb227ad9c82b3d2d7
+  REPLICA_SOURCE_SHA: aa84e677db3e14cd9b704534e421e0290dee7b99
   REPLICA_TEST_MODE: dry-run
+  REPLICA_RUNNER_LABEL: grok-box
 jobs:
   check-branch-commit-message:
     name: check-branch-commit-message [simulated]
     if: ${{ always() }}
+    timeout-minutes: 5
     runs-on:
     - self-hosted
-    - replica-driver
+    - grok-box
     strategy:
       fail-fast: false
       matrix:
@@ -28,17 +35,18 @@ jobs:
         }}
       MATRIX_JSON: ${{ toJson(matrix) }}
     steps:
+    - name: Checkout replica harness
+      uses: actions/checkout@v4
     - name: Simulate source job contract
       shell: python
       run: python ci_sim/runner.py
   call-arsenal-pseudo-test:
     name: call-arsenal-pseudo-test [simulated]
-    needs:
-    - check-branch-commit-message
     if: ${{ always() }}
+    timeout-minutes: 5
     runs-on:
     - self-hosted
-    - replica-driver
+    - grok-box
     strategy:
       fail-fast: false
       matrix:
@@ -53,6 +61,10 @@ jobs:
         }}
       MATRIX_JSON: ${{ toJson(matrix) }}
     steps:
+    - name: Checkout replica harness
+      uses: actions/checkout@v4
     - name: Simulate source job contract
       shell: python
       run: python ci_sim/runner.py
+    needs:
+    - check-branch-commit-message
