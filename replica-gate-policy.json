@@ -1,0 +1,88 @@
+{
+  "mode": "dry-run",
+  "source_repo": "ChipLTech/DLC-Kernel-Driver",
+  "source_sha": "aa84e677db3e14cd9b704534e421e0290dee7b99",
+  "source_ruleset_id": 3257415,
+  "required_checks": [
+    "Driver CI aggregate",
+    "Check Driver API change window / Check API change window"
+  ],
+  "ruleset_snapshot": {
+    "id": 3257415,
+    "name": "rule_driver",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "ChipLTech/DLC-Kernel-Driver",
+    "enforcement": "active",
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "~DEFAULT_BRANCH"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "type": "deletion"
+      },
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": false,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "Driver CI aggregate",
+              "integration_id": 15368
+            },
+            {
+              "context": "Check Driver API change window / Check API change window",
+              "integration_id": 15368
+            }
+          ]
+        }
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 2,
+          "dismiss_stale_reviews_on_push": true,
+          "required_reviewers": [],
+          "require_code_owner_review": true,
+          "dismissal_restriction": {
+            "enabled": false,
+            "allowed_actors": []
+          },
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": true,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        }
+      }
+    ],
+    "node_id": "RRS_lACqUmVwb3NpdG9yec4oelexzgAxtEc",
+    "created_at": "2025-01-14T10:44:10.051+08:00",
+    "updated_at": "2026-09-14T11:54:43.808+08:00",
+    "current_user_can_bypass": "never",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/ChipLTech/DLC-Kernel-Driver/rulesets/3257415"
+      },
+      "html": {
+        "href": "https://github.com/ChipLTech/DLC-Kernel-Driver/rules/3257415"
+      }
+    }
+  },
+  "runner_label": "grok-box",
+  "simulation_command": "python3 ci_sim/runner.py",
+  "remote_enforcement": "not applied; private replica branch protection API returned 403",
+  "note": "This policy mirrors production gate intent; it is declarative and does not claim GitHub enforcement."
+}
