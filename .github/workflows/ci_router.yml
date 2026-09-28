@@ -28,18 +28,12 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: route
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
     steps:
     - name: Checkout replica harness
@@ -54,18 +48,12 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: prechecks
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
     steps:
     - name: Checkout replica harness
@@ -80,19 +68,14 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: run_actual_tpu
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
+      NEEDS_JSON: ${{ toJson(needs) }}
     steps:
     - name: Checkout replica harness
       uses: actions/checkout@v4
@@ -109,19 +92,14 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: run_pseudo
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
+      NEEDS_JSON: ${{ toJson(needs) }}
     steps:
     - name: Checkout replica harness
       uses: actions/checkout@v4
@@ -138,19 +116,14 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: run_multi_kernel
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
+      NEEDS_JSON: ${{ toJson(needs) }}
     steps:
     - name: Checkout replica harness
       uses: actions/checkout@v4
@@ -167,19 +140,14 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: run_vtpu_uat
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
+      NEEDS_JSON: ${{ toJson(needs) }}
     steps:
     - name: Checkout replica harness
       uses: actions/checkout@v4
@@ -196,19 +164,14 @@ jobs:
     runs-on:
     - self-hosted
     - grok-box
-    strategy:
-      fail-fast: false
-      matrix:
-        replica_case:
-        - default
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
       REPLICA_SOURCE_JOB: aggregate
       REPLICA_SCOPE: public
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || ''
-        }}
+      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
       MATRIX_JSON: ${{ toJson(matrix) }}
+      NEEDS_JSON: ${{ toJson(needs) }}
     steps:
     - name: Checkout replica harness
       uses: actions/checkout@v4
