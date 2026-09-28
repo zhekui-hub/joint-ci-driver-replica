@@ -32,6 +32,7 @@ name: Joint CI participant replica [dry-run]
         default: ''
 permissions:
   contents: read
+  statuses: write
 jobs:
   independent-contract:
     name: Independent contract [simulated]
@@ -57,7 +58,7 @@ jobs:
     - run: python3 ci_sim/runner.py
   joint-report:
     name: Joint report [simulated]
-    timeout-minutes: 4
+    timeout-minutes: 3
     runs-on:
     - self-hosted
     - grok-box
@@ -71,11 +72,10 @@ jobs:
       REPLICA_SCOPE: public
       JOINT_DISPATCH_TOKEN: ${{ secrets.JOINT_DISPATCH_TOKEN }}
       JOINT_TARGET_REPO: zhekui-hub/joint-ci-arsenal-replica
-      JOINT_STATE_ISSUE_NUMBER: "1"
-      JOINT_WAIT_TIMEOUT_SECONDS: "150"
-      JOINT_WAIT_INTERVAL_SECONDS: "5"
+      GITHUB_TOKEN: ${{ github.token }}
+      JOINT_STATUS_CONTEXT: Joint CI readiness
       JOINT_REPORT_ONLY: ${{ inputs.report_only || false }}
-      JOINT_MEMBERS_JSON: ${{ inputs.participants_json || '["driver","synapse","sim"]' }}
+      JOINT_MEMBERS_JSON: ${{ inputs.participants_json || '["driver","synapse"]' }}
     steps:
     - uses: actions/checkout@v4
     - run: python3 ci_sim/participant_report.py
