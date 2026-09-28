@@ -18,3 +18,7 @@ This branch is used to observe the replica gate and joint-report flow on a fresh
 ## Joint CI wait-state observation
 
 This test branch intentionally opens the Driver participant first. The Synapse participant is omitted so `Joint CI readiness` should remain pending until its report arrives.
+
+## Joint CI driver-first wait observation
+
+This branch is intentionally submitted before the paired Synapse branch so the joint readiness status remains pending.
