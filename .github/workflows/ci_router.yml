@@ -190,7 +190,7 @@ jobs:
     - route
     - prechecks
   aggregate:
-    name: Driver CI aggregate [simulated]
+    name: Driver CI aggregate
     if: ${{ always() }}
     timeout-minutes: 5
     runs-on:
