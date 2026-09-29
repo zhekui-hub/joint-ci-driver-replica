@@ -25,3 +25,5 @@ This branch intentionally opens the Driver participant without submitting a Syna
 ## Joint CI fourth experiment
 
 This branch starts the fourth experiment from the merged Arsenal, Driver, and Synapse implementation. The Driver PR is opened first; the Synapse participant is intentionally omitted until the second phase.
+
+<!-- final joint summary presentation demo -->
