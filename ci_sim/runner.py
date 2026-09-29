@@ -1,4 +1,4 @@
-"""Lightweight replica job; propagate dependency failures before simulating work."""
+"""Run a lightweight replica job while preserving dependency semantics."""
 import hashlib
 import json
 import os
@@ -12,15 +12,31 @@ def main():
     matrix = os.environ.get("MATRIX_JSON", "{}")
     failure = os.environ.get("SIMULATE_FAILURE", "")
     needs = json.loads(os.environ.get("NEEDS_JSON", "{}"))
-    failed_needs = {key: value.get("result") for key, value in needs.items()
-                    if value.get("result") != "success"}
+    allow_skipped = os.environ.get("REPLICA_ALLOW_SKIPPED_NEEDS", "").lower() == "true"
+    failed_needs = {
+        key: value.get("result")
+        for key, value in needs.items()
+        if value.get("result") != "success"
+        and not (allow_skipped and value.get("result") == "skipped")
+    }
     result = "failure" if failed_needs or failure in (repo, workflow, job, "all") else "success"
     identity = f"{repo}:{workflow}:{job}:{matrix}"
-    print(json.dumps({"repo": repo, "workflow": workflow, "job": job,
-                      "scope": os.environ.get("REPLICA_SCOPE", "private"),
-                      "matrix": matrix, "result": result, "failed_needs": failed_needs,
-                      "test_key": "replica-" + hashlib.sha256(identity.encode()).hexdigest()[:16]},
-                     sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "repo": repo,
+                "workflow": workflow,
+                "job": job,
+                "scope": os.environ.get("REPLICA_SCOPE", "private"),
+                "execution_owner": os.environ.get("REPLICA_EXECUTION_OWNER", "participant"),
+                "matrix": matrix,
+                "result": result,
+                "failed_needs": failed_needs,
+                "test_key": "replica-" + hashlib.sha256(identity.encode()).hexdigest()[:16],
+            },
+            sort_keys=True,
+        )
+    )
     return 0 if result == "success" else 1
 
 

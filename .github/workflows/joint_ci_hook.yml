@@ -69,7 +69,8 @@ jobs:
       JOINT_DEPS_JSON: ${{ inputs.depends_on_json || '{}' }}
       REPLICA_SOURCE_WORKFLOW: joint_ci_hook
       REPLICA_SOURCE_JOB: joint-report
-      REPLICA_SCOPE: public
+      REPLICA_SCOPE: joint
+      REPLICA_EXECUTION_OWNER: arsenal
       JOINT_DISPATCH_TOKEN: ${{ secrets.JOINT_DISPATCH_TOKEN }}
       JOINT_TARGET_REPO: zhekui-hub/joint-ci-arsenal-replica
       GITHUB_TOKEN: ${{ github.token }}
