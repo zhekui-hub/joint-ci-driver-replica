@@ -2,15 +2,12 @@ name: Driver PR CI Router [replica dry-run]
 'on':
   pull_request:
     branches:
-    - main
-    types:
-    - opened
-    - synchronize
-    - reopened
+      - main
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       simulate_failure:
-        description: Fail one simulated job by id/workflow/repo, or all
+        description: Fail the participant aggregate simulation
         required: false
         default: ''
 permissions:
@@ -21,155 +18,11 @@ env:
   REPLICA_TEST_MODE: dry-run
   REPLICA_RUNNER_LABEL: grok-box
 jobs:
-  route:
-    name: route [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: route
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-  prechecks:
-    name: prechecks [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: prechecks
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-  run_actual_tpu:
-    name: run_actual_tpu [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: run_actual_tpu
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-      NEEDS_JSON: ${{ toJson(needs) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-    needs:
-    - route
-    - prechecks
-  run_pseudo:
-    name: run_pseudo [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: run_pseudo
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-      NEEDS_JSON: ${{ toJson(needs) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-    needs:
-    - route
-    - prechecks
-  run_multi_kernel:
-    name: run_multi_kernel [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: run_multi_kernel
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-      NEEDS_JSON: ${{ toJson(needs) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-    needs:
-    - route
-    - prechecks
-  run_vtpu_uat:
-    name: run_vtpu_uat [simulated]
-    if: ${{ github.event_name != 'pull_request' }}
-    timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
-    env:
-      REPLICA_REPOSITORY: driver
-      REPLICA_SOURCE_WORKFLOW: ci_router.yml
-      REPLICA_SOURCE_JOB: run_vtpu_uat
-      REPLICA_SCOPE: shared-arsenal
-      REPLICA_EXECUTION_OWNER: arsenal
-      SIMULATE_FAILURE: ${{ inputs.simulate_failure || vars.SIMULATE_FAILURE || '' }}
-      MATRIX_JSON: ${{ toJson(matrix) }}
-      NEEDS_JSON: ${{ toJson(needs) }}
-    steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-    needs:
-    - route
-    - prechecks
   aggregate:
     name: Driver CI aggregate
     if: ${{ always() }}
     timeout-minutes: 5
-    runs-on:
-    - self-hosted
-    - grok-box
+    runs-on: [self-hosted, grok-box]
     env:
       REPLICA_REPOSITORY: driver
       REPLICA_SOURCE_WORKFLOW: ci_router.yml
@@ -181,15 +34,8 @@ jobs:
       MATRIX_JSON: ${{ toJson(matrix) }}
       NEEDS_JSON: ${{ toJson(needs) }}
     steps:
-    - name: Checkout replica harness
-      uses: actions/checkout@v4
-    - name: Simulate source job contract
-      shell: bash
-      run: python3 ci_sim/runner.py
-    needs:
-    - route
-    - prechecks
-    - run_actual_tpu
-    - run_pseudo
-    - run_multi_kernel
-    - run_vtpu_uat
+      - name: Checkout replica harness
+        uses: actions/checkout@v4
+      - name: Simulate participant aggregate contract
+        shell: bash
+        run: python3 ci_sim/runner.py

@@ -25,3 +25,13 @@ This branch intentionally opens the Driver participant without submitting a Syna
 ## Joint CI fourth experiment
 
 This branch starts the fourth experiment from the merged Arsenal, Driver, and Synapse implementation. The Driver PR is opened first; the Synapse participant is intentionally omitted until the second phase.
+
+## Joint CI seamless switch validation
+This commit validates that shared tests run once in Arsenal while their per-test checks remain visible from both participant PRs.
+
+\n
+## Joint CI direct status presentation
+This commit exercises one visible per-test status linking directly to the shared Arsenal job.
+
+## Joint CI generation reset validation
+This commit verifies stale participant snapshots cannot start a mixed-SHA matrix.
