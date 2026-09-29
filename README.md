@@ -18,3 +18,7 @@ This branch is used to observe the replica gate and joint-report flow on a fresh
 ## Joint CI wait-state observation
 
 This test branch intentionally opens the Driver participant first. The Synapse participant is omitted so `Joint CI readiness` should remain pending until its report arrives.
+
+## Joint CI third experiment
+
+This branch intentionally opens the Driver participant without submitting a Synapse PR. Joint CI readiness must remain pending and Arsenal must not start the public matrix.
