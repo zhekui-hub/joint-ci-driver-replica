@@ -11,7 +11,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -25,10 +26,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "build_Pseudo_DLC.yml",
     "job": "check-branch-commit-message",
@@ -39,10 +41,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "build_Pseudo_DLC.yml",
     "job": "call-arsenal-pseudo-test",
@@ -55,10 +58,11 @@
     },
     "needs": [
       "check-branch-commit-message"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "route",
@@ -69,10 +73,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "prechecks",
@@ -83,10 +88,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "run_actual_tpu",
@@ -100,10 +106,11 @@
     "needs": [
       "route",
       "prechecks"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "run_pseudo",
@@ -117,10 +124,11 @@
     "needs": [
       "route",
       "prechecks"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "run_multi_kernel",
@@ -134,10 +142,11 @@
     "needs": [
       "route",
       "prechecks"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "run_vtpu_uat",
@@ -151,10 +160,11 @@
     "needs": [
       "route",
       "prechecks"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
-    "scope": "public",
+    "scope": "private",
     "repo": "driver",
     "workflow": "ci_router.yml",
     "job": "aggregate",
@@ -172,7 +182,8 @@
       "run_pseudo",
       "run_multi_kernel",
       "run_vtpu_uat"
-    ]
+    ],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -186,7 +197,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -200,7 +212,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -214,7 +227,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -228,10 +242,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "driver",
     "workflow": "multi-kernel-build.yml",
     "job": "call-arsenal-multi-kernel",
@@ -242,7 +257,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "arsenal"
   },
   {
     "scope": "private",
@@ -256,7 +272,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -270,7 +287,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -284,7 +302,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -298,7 +317,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -312,7 +332,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -326,7 +347,8 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -342,7 +364,8 @@
     },
     "needs": [
       "pre-checks"
-    ]
+    ],
+    "execution_owner": "participant"
   },
   {
     "scope": "private",
@@ -356,10 +379,11 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   },
   {
-    "scope": "public",
+    "scope": "shared-arsenal",
     "repo": "joint",
     "workflow": "joint-triad",
     "job": "public-smoke",
@@ -374,7 +398,8 @@
       "driver",
       "synapse",
       "sim"
-    ]
+    ],
+    "execution_owner": "arsenal"
   },
   {
     "scope": "private",
@@ -387,6 +412,7 @@
         "default"
       ]
     },
-    "needs": []
+    "needs": [],
+    "execution_owner": "participant"
   }
 ]
