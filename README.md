@@ -22,3 +22,6 @@ This test branch intentionally opens the Driver participant first. The Synapse p
 ## Joint CI third experiment
 
 This branch intentionally opens the Driver participant without submitting a Synapse PR. Joint CI readiness must remain pending and Arsenal must not start the public matrix.
+## Joint CI fourth experiment
+
+This branch starts the fourth experiment from the merged Arsenal, Driver, and Synapse implementation. The Driver PR is opened first; the Synapse participant is intentionally omitted until the second phase.
