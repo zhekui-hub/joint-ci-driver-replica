@@ -3,6 +3,7 @@ name: Joint CI participant replica [dry-run]
   pull_request:
     branches:
     - main
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
     inputs:
       joint_id:
