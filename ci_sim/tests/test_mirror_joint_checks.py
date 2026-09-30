@@ -32,6 +32,33 @@ def payload(**overrides):
 class MirrorCheckTests(unittest.TestCase):
     def test_check_name_is_short_and_stable(self):
         self.assertEqual(MODULE.check_name({"job": "compile"}), "joint/compile")
+        self.assertEqual(
+            MODULE.check_names(
+                [
+                    {
+                        "job": "prechecks",
+                        "display_name": "joint/prechecks [ci_router] [driver]",
+                    },
+                    {
+                        "job": "prechecks",
+                        "display_name": "joint/prechecks [ci_router] [synapse]",
+                    },
+                ]
+            ),
+            [
+                "joint/prechecks [ci_router] [driver]",
+                "joint/prechecks [ci_router] [synapse]",
+            ],
+        )
+        self.assertEqual(
+            MODULE.check_names(
+                [
+                    {"id": "one", "job": "build", "display_name": "joint/build [same]"},
+                    {"id": "two", "job": "build", "display_name": "joint/build [same]"},
+                ]
+            ),
+            ["joint/build [same]", "joint/build [same] [two]"],
+        )
 
     def test_snapshot_must_match_local_participant(self):
         phase, repo, sha = MODULE.validate_payload(payload(), DRIVER_REPO)
