@@ -1,6 +1,7 @@
 """Mirror Arsenal's shared matrix as native checks in this participant repository."""
 import json
 import os
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
@@ -83,9 +84,35 @@ def validate_payload(payload, repository):
 
 
 def check_name(test):
-    """Use the short native-check name requested by the participant repos."""
+    """Return the short base name used for a shared job."""
     job = test.get("job") or test.get("id") or "shared-test"
     return f"joint/{job}"
+
+
+def check_names(tests):
+    """Build deterministic names, disambiguating duplicate job names only."""
+    bases = [check_name(test) for test in tests]
+    counts = Counter(bases)
+    names = []
+    used = set()
+    for test, base in zip(tests, bases):
+        if counts[base] == 1:
+            candidate = base
+            if candidate in used:
+                candidate = f"{base} [{test.get('id') or 'variant'}]"
+            names.append(candidate[:255])
+            used.add(candidate)
+            continue
+        display = str(test.get("display_name") or "").strip()
+        suffix = display[len(base) :].strip() if display.startswith(base) else display
+        if not suffix:
+            suffix = f"[{test.get('id') or 'variant'}]"
+        candidate = f"{base} {suffix}"[:255]
+        if candidate in used:
+            candidate = f"{candidate[: max(1, 255 - len(str(test.get('id') or 'variant')) - 3)]} [{test.get('id') or 'variant'}]"
+        names.append(candidate)
+        used.add(candidate)
+    return names
 
 
 def existing_checks(repo, sha):
@@ -100,13 +127,17 @@ def existing_checks(repo, sha):
         checks.extend(batch)
         if len(batch) < 100:
             break
+    # The external id is the stable identity.  A check name can change when
+    # Arsenal adds a disambiguating suffix for duplicate job names, so it must
+    # not prevent an in-place update during a rerun or display-only replay.
     return {
-        (item.get("external_id"), item.get("name")): item.get("id")
+        item.get("external_id"): item.get("id")
         for item in checks
+        if item.get("external_id") and item.get("id")
     }
 
 
-def output(test, phase, target):
+def output(test, phase, target, name=None):
     result = test.get("result", "pending")
     summary = (
         "Arsenal is running this shared test once; this participant check is a mirror."
@@ -117,7 +148,7 @@ def output(test, phase, target):
     needs = json.dumps(test.get("needs", []), ensure_ascii=False)
     text = "\n".join(
         [
-            f"### {check_name(test)}",
+            f"### {name or check_name(test)}",
             f"- Test ID: `{test.get('id', 'unknown')}`",
             f"- Workflow: `{test.get('workflow', 'unknown')}`",
             f"- Job: `{test.get('job', 'unknown')}`",
@@ -136,16 +167,17 @@ def output(test, phase, target):
     }
 
 
-def upsert(repo, sha, joint_key, test, phase, check_id=None, target=None):
+def upsert(repo, sha, joint_key, test, phase, check_id=None, target=None, name=None):
     external_id = f"{joint_key}:{test['id']}"
     target = target or os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    name = name or check_name(test)
     payload = {
-        "name": check_name(test),
+        "name": name,
         "head_sha": sha,
         "external_id": external_id,
         "status": "in_progress" if phase == "running" else "completed",
         "details_url": target,
-        "output": output(test, phase, target),
+        "output": output(test, phase, target, name),
     }
     if phase == "running":
         payload["started_at"] = iso_now()
@@ -180,13 +212,16 @@ def main():
     existing = existing_checks(repo, sha)
     target_default = payload.get("public_run_url", "")
     work = []
-    for test in tests:
-        key = (f"{joint_key}:{test['id']}", check_name(test))
-        work.append((test, existing.get(key), test.get("target_url") or target_default))
+    names = check_names(tests)
+    for test, name in zip(tests, names):
+        key = f"{joint_key}:{test['id']}"
+        work.append((test, existing.get(key), test.get("target_url") or target_default, name))
     with ThreadPoolExecutor(max_workers=12) as pool:
         ok = all(
             pool.map(
-                lambda item: upsert(repo, sha, joint_key, item[0], phase, item[1], item[2]),
+                lambda item: upsert(
+                    repo, sha, joint_key, item[0], phase, item[1], item[2], item[3]
+                ),
                 work,
             )
         )
